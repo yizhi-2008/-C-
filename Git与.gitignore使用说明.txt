@@ -1,0 +1,351 @@
+========================================
+ Git 与 .gitignore 使用说明（个人笔记）
+ 创建日期：2026-09-18
+========================================
+
+一、Git 是什么
+----------------------------------------
+Git 是版本管理工具，记录每次代码改动，可随时回退、对比。
+VS Code 只是编辑器，内置了 Git 的图形界面（左侧"源代码管理"图标），
+点按钮实际上是帮你执行 git 命令。VS Code 不包含 Git，Git 需单独安装
+（本机已装好：D:\anzhuang\Git）。
+
+
+二、怎么打开 / 使用 Git（四种方式）
+----------------------------------------
+1. Git Bash：D:\anzhuang\Git\git-bash.exe（或开始菜单搜"Git Bash"）
+2. VS Code 集成终端：打开 VS Code 按 Ctrl+` ，直接输入 git 命令
+3. VS Code 源代码管理面板：左侧分支图标，打开 Git 仓库文件夹才有内容
+4. 快捷方式+参数：给 git-bash.exe 建桌面快捷方式，在"目标"末尾加上
+     --cd=C:\Users\lenovo\Desktop\C++
+   然后双击快捷方式，Git Bash 一打开就直接站在 C++ 仓库里，省去手动 cd。
+   （原理：--cd= 路径 = 告诉程序"启动后先把目录切到这里"，
+     它决定了 git 命令操作的"当前文件夹"，详见 九。）
+
+注意：git 命令必须在"仓库"里才有意义。
+  第一次用要先 git init 建仓库，或 git clone 下载别人的仓库。
+
+
+三、常用命令速查
+----------------------------------------
+cd 文件夹名     进入某个文件夹（cd .. 返回上级）
+pwd             显示当前站在哪个文件夹（print working directory）
+ls              列出当前文件夹里的所有文件
+git init        把当前文件夹变成 Git 仓库
+git status      查看当前状态（哪些文件改了/没提交）
+git add 文件名  把文件加入暂存区（git add . = 全部）
+git commit -m "说明"   提交这次改动
+git log         查看提交历史
+git rm --cached 文件    把已跟踪文件移出 Git（本地文件保留）
+git ls-files            列出当前仓库跟踪的所有文件（一行一个）
+git log --name-status   每个提交改动了哪些文件（A=新增 M=修改 D=删除）
+
+注意：git commit 必须带 -m "说明"，否则会进入全屏文本编辑器(vim)，
+  新手容易卡住。万一进去了：按 Esc，再输 :q! 回车退出。
+
+
+四、Git 身份配置（本机已完成，全局生效）
+----------------------------------------
+user.name  = yizhi_2008
+user.email = gongminghao2008@outlook.com
+
+如果提交时报错 "Please tell me who you are"，
+就是没配身份，运行：
+  git config --global user.name "你的名字"
+  git config --global user.email "你的邮箱"
+跟密码无关。密码只有往 GitHub 推送时才需要。
+
+
+五、.gitignore 是什么、怎么用
+----------------------------------------
+它是一个"规则文件"（不是文件夹！），放在仓库根目录（如 桌面\C++ 里、
+和 .vscode、basics 同级），告诉 Git 哪些文件不要跟踪。
+
+编辑方法：
+  文件里每行写一条规则，保存即生效。
+
+常用规则写法：
+  *.exe          所有 .exe 类型（* = 任意名字）
+  gmon.out       指定这一个文件
+  test/          整个文件夹
+  *.log          所有日志文件
+
+注意：千万别写 *.cpp，否则源码也不被跟踪了。
+只忽略两类东西：编译产物（.exe/.obj/gmon.out）、个人/临时文件。
+
+
+六、三个容易踩的坑
+----------------------------------------
+坑1：文件名必须是 .gitignore，不能是 .gitignore.txt！
+     用记事本保存可能自动加 .txt 后缀，建议用 VS Code 保存。
+坑2：必须放在仓库根目录，放错了只对子文件夹生效。
+坑3：已经提交过的文件，加进 .gitignore 没用！
+     要先执行：git rm --cached 文件名，再提交。
+
+新文件（还没提交过的）会立即被 .gitignore 拦住。
+
+
+七、提交流程详解（add / commit 在哪输入、什么反馈）
+----------------------------------------
+输入位置：Git Bash 窗口（或 VS Code 终端），窗口必须站在仓库里。
+命令在 $ 提示符后输入，按回车执行。
+
+  1. 改代码 → Ctrl+S 保存（⚠️ 必须先保存，见下方提醒）
+  2. git status              看改了哪些文件（红色=还没提交）
+  3. git add .               全部加入暂存（. = 当前文件夹所有文件）
+     → 无输出 = 成功；漏掉 . 只输 git add 会报错
+  4. git status              确认文件变绿 = 已暂存
+  5. git commit -m "改了什么"   提交
+     → 成功会显示 [main 一串数字] 和 files changed 行
+     必须带 -m，不带会进 vim 全屏编辑器（Esc 然后 :q! 退出）
+  6. git status              显示 working tree clean = 全部提交干净
+  7. （推送 GitHub 时）git push
+
+⚠️ 重要：提交前必须先保存文件！
+  未保存的改动（VS Code 标签页文件名旁有 ● 小圆点）git 看不到，
+  直接提交只会存下"上次保存的旧内容"，最新改动不会进存档。
+  在 VS Code 点提交时弹"该文件有未保存的更改" = 在提醒你，
+  点弹窗上的"保存"，或先按 Ctrl+S 再提交。
+  原因：git 只认磁盘上已保存的内容，不认编辑器内存里的东西。
+
+核心概念：add + commit = 给文件存一个"档"（完整快照），
+  不是移动文件。源文件始终在桌面文件夹里，.git 里多留一份安全副本，
+  随时可以回退。方向是"文件→存进 git"，不是"提取出来"。
+
+
+八、本仓库（桌面\C++）已完成的记录
+----------------------------------------
+  仓库已初始化（main 分支）
+  第一次提交：d29ba53  Add C++ basics exercises（33 个文件）
+  清理提交：  30a63e0  Remove build artifacts, add gitignore
+              （移除了 seeklove.exe / whileinsert(compare).exe / gmon.out，
+                本地文件还在，只是不再被 Git 跟踪）
+  .gitignore 内容：*.exe、gmon.out
+
+
+九、"当前文件夹"到底指什么（--cd 的原理）
+----------------------------------------
+git add . / git commit 等命令操作的"当前文件夹"，
+= Git Bash 窗口自己"站"的位置（提示符上的路径），
+  跟你在文件资源管理器、VS Code 里打开了哪个窗口无关。
+
+怎么知道窗口站在哪：
+  · 看提示符：lenovo@xxx MINGW64 /c/Users/lenovo/Desktop/C++ (main)
+    → 提示符显示到 C++ 才是在仓库里
+  · 输入 pwd 回车，直接打印当前位置
+  · 输入 ls 回车，列出当前文件夹内容（应看到 basics、.gitignore 等）
+
+路径写法对照：
+  Windows 写法  C:\Users\lenovo\Desktop\C++
+  Git Bash 写法 /c/Users/lenovo/Desktop/C++
+               (/c/ = C盘，Users/lenovo = 用户目录，Desktop = 桌面)
+
+--cd= 快捷方式原理：
+  双击快捷方式 = 执行 git-bash.exe --cd=C:\Users\lenovo\Desktop\C++
+  = 程序名 + 参数。--cd= 是参数，告诉 bash "启动前先 cd 到该目录"，
+  所以窗口一开就站在 C++ 仓库里，省去手动 cd。
+  不用快捷方式也行：开 Git Bash（默认在主目录 ~）后，
+  手动输入 cd /c/Users/lenovo/Desktop/C++ 效果相同。
+
+--cd= 与 cd 的正确使用场合（最容易混，重点看）：
+  · --cd= 是"启动参数"，只在窗口还没打开时用，仅出现在两个地方：
+      ① 快捷方式的"目标"栏里
+      ② PowerShell / cmd 里启动 git-bash.exe 时
+  · cd 是窗口内的命令，窗口已经打开后就只能用它。
+    一句话：窗口里永远只有 cd，没有 --cd=。
+
+  错误示例（窗口里输入会报 command not found）：
+    $ --cd= /c/Users/lenovo/Desktop/C++
+    bash: --cd=: command not found
+  正确写法：
+    $ cd /c/Users/lenovo/Desktop/C++
+
+报错 "No such file or directory" 的三种原因：
+  1. 用了 Windows 反斜杠：cd C:\Users\lenovo\Desktop\C++
+     → bash 里必须正斜杠：cd /c/Users/lenovo/Desktop/C++
+  2. 多打了前缀：cd --cd= /c/... → 不要 --cd=，直接 cd 路径
+  3. 路径拼写错（多了空格 / 少了目录）→ 逐字母对照抄
+
+
+十、怎么把"其他文件夹"变成仓库（git init 详解）
+----------------------------------------
+最关键的一步区分：
+  · cd / --cd=   = 只是让窗口"站到"某个文件夹，不改变文件夹身份
+  · git init     = 让"当前站着的文件夹"变成仓库（唯一必要步骤，生成 .git）
+  所以：站进去 ≠ 变成仓库。
+  C++ 是仓库不是靠快捷方式，是因为它里面已经执行过 git init。
+
+仓库的定义：
+  仓库 = 一个被 git init 初始化过的文件夹（里面多了隐藏的 .git）。
+  同一个文件夹：init 前叫"普通文件夹"，init 后叫"仓库"。
+
+操作流程（同一个 Git Bash 窗口里完成，先 cd 后 init）：
+  1. cd /c/Users/lenovo/Desktop/Python
+     ← 先站到目标文件夹（注意看提示符是否变成 .../Python）
+  2. git init
+     → 显示 Initialized empty Git repository in .../.git/ 即成功
+  3. git status
+     → 显示 No commits yet = 空仓库，正常（init 只搭壳子）
+  4. git add .
+  5. git commit -m "第一次提交"
+     → 存下第一个档，提示符出现 (main) 字样
+
+三个提醒：
+  · 初始化对象是"文件夹"，不是单个文件（不能对 .cpp 文件 init）
+  · git init 只搭壳子，第一次 add + commit 后才有提交历史
+  · 别在已是仓库的文件夹的子文件夹里再 init（会"仓库套仓库"），
+    一个顶层文件夹一个仓库即可
+
+如果没初始化就输 git status，会报错 not a git repository
+——这个报错就是在提醒："这里还不是仓库，先 cd 进来 git init"。
+
+
+十一、查看"原版"：git show / git diff / git restore【重点章节】
+----------------------------------------
+一句话理解：原版 = "某个提交里存档的版本"；HEAD = 最后一次提交。
+
+【① 看原版全文】——只"看"，不改变任何东西，随便用：
+  git show HEAD:basics/99.cpp
+  git show d29ba53:basics/99.cpp    ← 换成具体提交号，看更早的版本
+  （把 HEAD 或提交号换成别的，想看哪个文件就写哪个）
+
+【② 看原版和改动的对比】——只"比"，不改变任何东西，随便用：
+  git diff basics/99.cpp
+  → 绿色 + 行 = 我加的，红色 - 行 = 我删的
+  或 VS Code 源代码管理面板点文件：左边=原版，右边=改动
+
+【③ 放弃改动、恢复原版】——⚠️ 会永久丢弃未提交改动，慎用！
+  git restore basics/99.cpp
+  执行后文件变成最后一次提交的样子，改坏的部分找不回来，
+  只有确定"这些改动不要了"才用它。
+
+⚠️⚠️ 重点提醒（背下来）：
+  1. git show    只"看"，安全，随便用
+  2. git diff    只"比"，安全，随便用
+  3. git restore 会"删改动"，用了就回不去，慎用！
+  正确顺序永远是：先 show / diff 看清楚，最后才决定要不要 restore。
+
+速查表：
+  看原版全文     git show HEAD:文件
+  看差异对比     git diff 文件
+  放弃改动       git restore 文件（慎用）
+
+
+十二、实用操作清单（进阶，按需查阅）
+----------------------------------------
+【撤销 / 纠错类】
+  git revert 提交号          安全撤销某次已提交的改动（生成新提交，历史不破坏）
+  git commit --amend         补救最后一次提交（改提交说明 / 补漏掉的文件）
+  git stash                  临时把改动收进抽屉；之后 git stash pop 取出来
+                             （改到一半想切走时救命）
+
+【分支类】分支 = 同一个仓库里的"平行世界"，互不干扰，最后合并
+  git branch                 看有哪些分支
+  git branch 新名字           新建分支
+  git checkout -b 新名字      新建并切过去（最常用）
+  git checkout 分支名         切换分支
+  git merge 另一个分支        把别的分支合并到当前分支
+  场景：想在 main 上做实验，又不想弄乱已提交的代码 → 建分支随便折腾
+
+【查看 / 搜索类】
+  git log --oneline --graph --all   图形化看整个提交路径
+  git log --oneline -5              只看最近 5 条
+  git blame 文件                     每行是谁、哪次提交改的
+  git log --name-status              每个提交改动了哪些文件（A=新增 M=修改 D=删除）
+  git ls-files                       列出当前仓库跟踪的所有文件（一行一个）
+
+【VS Code 里看改动路径（可视化，打开 C++ 文件夹后）】
+  ① Git Graph 扩展（推荐装）：
+     扩展市场搜"Git Graph"安装 → 源代码管理面板底部点 Git Graph 按钮
+     → 顶部每个提交一行 → 点提交，下方列出它包含的所有文件，双击看当时内容
+  ② 文件时间线（内置，不用装）：
+     资源管理器右键任意文件 → 打开时间线
+     → 列出该文件所有历史版本（每次提交算一条），点任意版本查看
+
+【远程 / GitHub 类】以后传 GitHub 用
+  git remote add origin 仓库地址    和 GitHub 仓库建立关联（每个仓库一次）
+  git push                          把本地提交推上 GitHub
+  git pull                          把 GitHub 上的更新拉下来
+  git clone 地址                    把别人的仓库整个下载到本地
+
+【建议学习顺序】
+  先玩熟 git stash（临时存档，几乎天天用）和 git log --graph（看清路径）
+  → 再学分支 branch / checkout / merge
+  → 最后要传 GitHub 了再认识 push / pull
+
+
+十三、git add + git commit 到底执行了什么【底层理解】
+----------------------------------------
+两步分别做了什么，用"写信→寄信"理解：
+
+【第一步：git add .】= 选文件、装进信封
+  你的文件（桌面\C++\basics\99.cpp）
+          │
+          │  git add .
+          ▼
+     暂存区（.git 里的一块"待提交区"）
+  做的事：把改过的文件复制一份副本放进暂存区（学名叫 index）
+  · 源文件本身不动、不消失，还在原地
+  · 只在 .git 里存了一份"这次改动的快照草稿"
+  · 执行后 git status 里文件从红色（未暂存）→ 绿色（已暂存）
+
+【第二步：git commit -m "说明"】= 把信封寄出去，永久存档
+  暂存区（git add 留下的草稿）
+          │
+          │  git commit -m "说明"
+          ▼
+    提交（.git/objects 里的压缩包，永久保存）
+    记录了：时间、作者、说明、文件内容
+    指向上一个提交，形成一条"链"
+  做的事：把暂存区内容打包压缩，写进 .git/objects，
+         生成一条带编号的提交记录（如 d29ba53）
+  commit 之后：暂存区清空，git status 显示 working tree clean
+
+
+【为什么非要两步，不合成一步？】
+  因为你可以选择"这次提交哪些文件"：
+    改了 3 个文件，但这次只想提交其中 2 个？
+    → git add 99.cpp salary.cpp     只暂存这两个
+    → git commit -m "乘法表和薪资"  只提交这两个
+    → fisheryates.cpp 留着下次再提交
+  想全部提交就 git add . 省了选择。
+
+
+【一句话总结】
+  add = 选好放进信封；commit = 把信封寄出去永久存档。
+  你的源文件始终在桌面文件夹里，.git 里只是多了一份永久副本。
+  每次 commit 就是一个"存档点"，改坏随时可回到任意存档点。
+
+
+十四、多人协作功能【之后学习的内容，先了解框架】
+----------------------------------------
+核心思想：每个人都有一份完整的仓库副本，改完互相合并。
+
+  远程仓库（GitHub / Gitee 码云 / GitLab，放在网上的"总仓库"）
+        ▲ push ▲           ▲ pull ▲
+        │                 │
+   你电脑上的副本        同事电脑上的副本
+
+新概念速记：
+  git push    把你的提交推上远程仓库（上传存档）
+  git pull    把远程仓库的提交拉下来（下载别人的存档）
+  git clone   第一次把远程仓库整个下载到本地
+  分支         每人/每个功能开一条"平行线"，互不干扰
+  merge        把分支合并回主线（存档合体）
+  冲突         两个人改了同一行，git 无法自动合并，需手动解决
+  Pull Request(P R)  合并前申请审查代码的流程（GitHub 概念）
+
+典型团队流程：
+  1. 建好 GitHub 仓库
+  2. git clone 地址 → 大家各下载一份
+  3. 每人用 git checkout -b 我的功能 开分支干活
+  4. 干完 push → 发起 Pull Request（申请合并）
+  5. 负责人审查 → 合并进主线
+  6. 每天开工先 git pull 拉最新的，继续干
+
+什么时候才需要学：
+  ① 想把代码 push 到网上备份/展示（GitHub / 国内用 Gitee 码云）
+  ② 和同学一起写一个大项目，需要共享代码
+  到时候问助手，会一步步带着建仓库、配远程、push。
+  目前单机用 Git 完全够，协作是"之后"的内容。
+========================================
